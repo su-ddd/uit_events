@@ -33,6 +33,8 @@ function uit_events_block_view($delta = '') {
       }
       $block['subject'] = t('Events');
       $block_content .= l('More Events', '/events', array('attributes' => array('class' => 'more-button')));
+      $featured_event = module_invoke('views', 'block_view', 'homepage_news-featured_event');
+      $block_content .= render($featured_event['content']);
       $block['content'] = $block_content;
       break; 
   }
