@@ -6,7 +6,7 @@
  */
 
 function uit_events_block_info() {
-  $blocks['homepage_events'] = array(
+  $blocks['home_events'] = array(
     'info'  => t('Homepage Events'),
     'cache' => DRUPAL_CACHE_PER_ROLE, 
   );
@@ -24,17 +24,18 @@ function uit_events_block_view($delta = '') {
   $block = array();
 
   switch ($delta) {
-    case 'homepage_events':
+    case 'home_events':
       $block_content = '';
-      $upcoming_events = uit_events_get_latest_events();
-      foreach ($upcoming_events as $event) {
-        $block_content .= '<span class="date-display-single">' . $event->date . '</span>';
-        $block_content .= l($event->title, 'node/' . $event->nid);
-      }
-      $block['subject'] = t('Events');
-      $block_content .= l('More Events', '/events', array('attributes' => array('class' => 'more-button')));
+      $block_content .= '<div id="block-views-homepage-events-events" class="span6 column clear-row">';
+      $upcoming_events = module_invoke('views', 'block_view', 'homepage_events-events');
+      $block_content .= render($upcoming_events['content']);
+      $block_content .= '</div>';
+
+      $block_content .= '<div id="block-views-homepage-news-featured-event" class="span6 column clearfix">';
       $featured_event = module_invoke('views', 'block_view', 'homepage_news-featured_event');
       $block_content .= render($featured_event['content']);
+      $block_content .= '</div>';
+
       $block['content'] = $block_content;
       break; 
   }
