@@ -1,0 +1,63 @@
+<?php
+
+/**
+ * Implementation of hook_block_info()
+ * This module creates a block for upcoming events
+ */
+
+function uit_events_block_info() {
+  $blocks['homepage_events'] = array(
+    'info'  => t('Homepage Events'),
+    'cache' => DRUPAL_CACHE_PER_ROLE, 
+  );
+  return $blocks;
+}
+
+/**
+ * Implementation of hook_block_view().
+ * @param string $delta code to identify the block
+*/
+
+function uit_events_block_view($delta = '') {
+
+  // set up an empty array which will contain the block contents
+  $block = array();
+
+  switch ($delta) {
+    case 'homepage_events':
+      $block_content = '';
+      $upcoming_events = uit_events_get_latest_events();
+      foreach ($upcoming_events as $event) {
+        $block_content .= '<span class="date-display-single">' . $event->date . '</span>';
+        $block_content .= l($event->title, 'node/' . $event->nid);
+      }
+      $block['subject'] = t('Events');
+      $block_content .= l('More Events', '/events', array('attributes' => array('class' => 'more-button')));
+      $block['content'] = $block_content;
+      break; 
+  }
+  return $block;
+}
+
+function uit_events_theme_registry_alter(&$theme_registry) {
+  $module_path = drupal_get_path('module', 'uit_events');
+  $theme_path = $module_path . '/theme';
+  $template_file_objects = drupal_find_theme_templates($theme_registry, '.tpl.php', $theme_path);
+
+  // Iterate through all found template file objects.
+  foreach ($template_file_objects as $key => $template_file_object) {
+    // If the template has not already been overridden by a theme.
+    if (!isset($theme_registry[$key]['theme path']) || !preg_match('#/themes/#', $theme_registry[$key]['theme path'])) {
+      // Alter the theme path and template elements.
+      $theme_registry[$key]['theme path'] = $module_path;
+      $theme_registry[$key] = array_merge($theme_registry[$key], $template_file_object);
+      $theme_registry[$key]['type'] = 'module';
+    }
+  }
+}
+
+function uit_events_get_latest_events() {
+  $query = db_query("SELECT nid, title, DATE_FORMAT(field_data_field_stanford_event_datetime.field_stanford_event_datetime_value, '%b %e') AS date FROM {node} LEFT JOIN {field_data_field_stanford_event_datetime} field_data_field_stanford_event_datetime ON node.nid = field_data_field_stanford_event_datetime.entity_id WHERE ((node.status = '1') AND (node.type = 'stanford_event') AND (DATE_FORMAT(ADDTIME(field_data_field_stanford_event_datetime.field_stanford_event_datetime_value, SEC_TO_TIME(-25200)), '%Y-%m-%d') >= CURRENT_DATE())) ORDER BY field_data_field_stanford_event_datetime.field_stanford_event_datetime_value ASC LIMIT 4 OFFSET 0");
+  $records = $query->fetchAll();
+  return $records;
+}
