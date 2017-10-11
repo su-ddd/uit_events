@@ -45,7 +45,9 @@
  */
 ?>
 <section id="<?php print $block_html_id; ?>">
-  <div class="content">
-    <?php print $content ?>
+  <div class="section-content">
+  	<div class="content">
+      <?php print $content ?>
+    </div>
   </div>
 </section>
